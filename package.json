@@ -1,21 +1,28 @@
 {
     "name": "nodejs-1",
+    "description": "Node.js basics.",
     "version": "1.0.0",
-    "description": "",
+    "author": {
+        "name": "Yaroslav Surilov",
+        "email": "zhibirc.echo@gmail.com",
+        "url": "http://test.directory/"
+    },
+    "license": "MIT",
+    "engines": {
+        "node": ">=14.17.4"
+    },
     "private": true,
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
-        "start": "APP_PORT=8080 node src/app.js NODE_ENV -- --trace-sync-io --trace-deprecation"
+        "start": "APP_PORT=8080 node src/app.js --env $SHELL -- --trace-sync-io --trace-deprecation"
     },
+    "homepage": "https://github.com/zhibirc/nodejs-1#readme",
     "repository": {
         "type": "git",
         "url": "git+https://github.com/zhibirc/nodejs-1.git"
     },
-    "keywords": [],
-    "author": "",
-    "license": "MIT",
     "bugs": {
         "url": "https://github.com/zhibirc/nodejs-1/issues"
     },
-    "homepage": "https://github.com/zhibirc/nodejs-1#readme"
+    "keywords": []
 }

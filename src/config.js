@@ -1,11 +1,11 @@
 /**
  * Main application config.
- *
- * @type {Readonly<{APP_PORT: number}>}
  */
+
+const cliArgs = process.argv.slice(2);
 
 
 module.exports = Object.freeze({
-    APP_PORT: process.env.APP_PORT || 3000,
-    ENV: process.argv[2] || 'n/a'
+    APP_PORT: process.env.APP_PORT || 8080,
+    ENV: cliArgs[0] === '--ENV' || cliArgs[0] === '--env' ? cliArgs[1] : null
 });
