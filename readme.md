@@ -12,14 +12,14 @@ npm start -- --key <OMDb API Key>
 
 ## API
 
-| Method |    Endpoint   |         Description         |
-|--------|---------------|-----------------------------|
-| GET    | `/`           | [link](#Homepage)           |
-| GET    | `/movies`     | [link](#Get all movies)     |
-| GET    | `/movies/:id` | [link](#Get movie by ID)    |
-| PATCH  | `/movies/:id` | [link](#Update movie by ID) |
-| DELETE | `/movies/:id` | [link](#Delete movie by ID) |
-| POST   | `/movies`     | [link](#Add new movie)      |
+| Method |                     Endpoint                       |         Description         |
+|--------|----------------------------------------------------|-----------------------------|
+| GET    | `/`                                                | [link](#Homepage)           |
+| GET    | `/movies?fields=Field_1,Field_2&limit=2&offset=10` | [link](#Get all movies)     |
+| GET    | `/movies/:id`                                      | [link](#Get movie by ID)    |
+| PATCH  | `/movies/:id`                                      | [link](#Update movie by ID) |
+| DELETE | `/movies/:id`                                      | [link](#Delete movie by ID) |
+| POST   | `/movies`                                          | [link](#Add new movie)      |
 
 ###### Homepage
 
