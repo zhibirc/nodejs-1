@@ -1,15 +1,10 @@
-import config from '../config';
-import { FastifyRequest } from 'fastify';
-import { StatusCodes, getReasonPhrase } from 'http-status-codes';
+import { FastifyReply, FastifyRequest} from 'fastify';
+import { StatusCodes } from 'http-status-codes';
 import { IStorage } from '../storage';
-
+import { default as searchOmdb } from '../services/omdb-search';
 
 export default {
-    init: (httpClient: any, storage: IStorage) => {
-        if ( !httpClient || !storage ) {
-            throw new Error('Router dependencies are incorrect.');
-        }
-
+    init: (storage: IStorage) => {
         return {
             schema: {
                 body: {
@@ -27,28 +22,25 @@ export default {
                     }
                 }
             },
-            handler: async function ( request: FastifyRequest ) {
+            handler: async function ( request: FastifyRequest, response: FastifyReply ) {
                 try {
                     // @ts-ignore
                     const { name, comment, personalScore } = request.body;
-
-                    let { data: info } = await httpClient.get(`${config.OMDB_API_BASE_URL}&t=${name}`);
-
-                    if ( info.Error ) {
-                        info = { name };
-                    }
+                    const info = await searchOmdb(name);
 
                     comment && (info.comment = comment);
                     personalScore && (info.personalScore = personalScore);
 
                     const storageResponse = storage.add(info);
 
-                    return storageResponse
-                        ? {data: storageResponse}
-                        : {error: `${StatusCodes.BAD_REQUEST} ${getReasonPhrase(StatusCodes.BAD_REQUEST)}`};
+                    response.statusCode = StatusCodes.OK;
+
+                    return {data: storageResponse};
                 } catch ( exception ) {
+                    response.statusCode = StatusCodes.INTERNAL_SERVER_ERROR;
+
                     return {
-                        error: `${StatusCodes.INTERNAL_SERVER_ERROR} ${getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR)}`
+                        error: 'Unexpected error.'
                     };
                 }
             }

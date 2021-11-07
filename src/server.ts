@@ -15,14 +15,9 @@ addRoutes(server)(storage);
 
 const start = async () => {
     try {
-        await server.listen(config.APP_PORT, (error, address) => {
-            if ( error ) {
-                logger.error(error);
-                process.exit(1);
-            }
-        });
+        await server.listen(config.APP_PORT);
     } catch ( exception ) {
-        server.log.error(exception);
+        logger.error(exception);
         process.exit(1);
     }
 };

@@ -7,7 +7,7 @@ const cloneDeep = (item: any[]) => JSON.parse(JSON.stringify(item));
 export interface IStorage {
     readonly logger: FastifyLoggerInstance,
     add: (data: any) => object | boolean,
-    read: (id?: string) => object[],
+    read: (id: string | null, filters?: string) => object[],
     update: (id: string, data: any) => object | boolean,
     delete: (id: string) => boolean
 }
@@ -19,8 +19,7 @@ export class Storage implements IStorage {
     constructor ( logger: FastifyLoggerInstance ) {
         this.logger = logger;
         Object.defineProperty(this, '__store', {
-            value: [],
-            writable: true
+            value: []
         });
     }
 
@@ -43,10 +42,33 @@ export class Storage implements IStorage {
         return data;
     }
 
-    read ( id?: string ) {
-        return id
+    read ( id: string | null, filters?: string ) {
+        let payload = id
             ? cloneDeep(this.__store.filter(item => item.imdbID === id))
             : cloneDeep(this.__store);
+
+        if ( filters ) {
+            let requestedKeys = filters
+                .split(',')
+                .map(field => field.trim())
+                .filter(Boolean);
+
+            if ( requestedKeys.length ) {
+                payload = payload
+                    .map((item: any) => {
+                        for ( const key in item ) {
+                            if ( !requestedKeys.includes(key) ) {
+                                delete item[key];
+                            }
+                        }
+
+                        return item;
+                    })
+                    .filter((item: any) => Object.keys(item).length);
+            }
+        }
+
+        return payload;
     }
 
     update ( id: string, data: any ) {
@@ -55,8 +77,17 @@ export class Storage implements IStorage {
         if ( entry ) {
             const { comment, personalScore } = data;
 
-            comment && (entry.comment = comment);
-            personalScore && (entry.personalScore = personalScore);
+            if ( comment === '' || comment == null ) {
+                delete entry.comment;
+            } else {
+                entry.comment = comment;
+            }
+
+            if ( personalScore == null ) {
+                delete entry.personalScore;
+            } else {
+                entry.personalScore = personalScore;
+            }
 
             return {...entry};
         }

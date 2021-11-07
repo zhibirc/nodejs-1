@@ -8,5 +8,6 @@ const apiKey = cliArgs[0] === '--KEY' || cliArgs[0] === '--key' ? cliArgs[1] : n
 
 export default Object.freeze({
     APP_PORT: process.env.APP_PORT || 8080,
-    OMDB_API_BASE_URL: `http://www.omdbapi.com/?apikey=${apiKey}`
+    OMDB_API_BASE_URL: `http://www.omdbapi.com/`,
+    OMDB_API_KEY: apiKey
 });

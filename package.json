@@ -13,8 +13,10 @@
     },
     "private": true,
     "scripts": {
+        "check-env": "node -e 'console.log(process.env)' | grep npm",
         "build": "npx tsc",
-        "test": "mocha --require ts-node/register",
+        "postbuild": "npm run test",
+        "test": "mocha",
         "start": "APP_PORT=8080 nodemon --trace-sync-io --trace-deprecation --exec 'ts-node src/server.ts'"
     },
     "homepage": "https://github.com/zhibirc/nodejs-1#readme",

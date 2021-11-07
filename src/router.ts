@@ -2,12 +2,8 @@
  * Routes declaration for server API.
  */
 
-// external
-import axios from 'axios';
-
 // types & interfaces
 import { FastifyInstance, RouteOptions } from 'fastify';
-import { RouteGenericInterface } from 'fastify/types/route';
 import { IStorage } from './storage';
 
 // routes
@@ -85,7 +81,7 @@ export const addRoutes = (serverInstance: FastifyInstance) => (storage: IStorage
             serverInstance.route({
                 method,
                 url,
-                ...router[method][url].init(axios, storage)
+                ...router[method][url].init(storage)
             });
         });
     });

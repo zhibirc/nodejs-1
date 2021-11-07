@@ -1,8 +1,8 @@
 // external
-import { StatusCodes, getReasonPhrase } from 'http-status-codes';
+import { StatusCodes } from 'http-status-codes';
 
 // types & interfaces
-import { RequestGenericInterface } from 'fastify';
+import { FastifyReply, RequestGenericInterface } from 'fastify';
 import { IStorage } from '../storage';
 
 
@@ -18,11 +18,7 @@ interface requestGeneric extends RequestGenericInterface {
 
 
 export default {
-    init: (httpClient: any, storage: IStorage) => {
-        if ( !httpClient || !storage ) {
-            throw new Error('Router dependencies are incorrect.');
-        }
-
+    init: (storage: IStorage) => {
         return {
             schema: {
                 params: {
@@ -40,7 +36,7 @@ export default {
                     }
                 }
             },
-            handler: async function ( request: requestGeneric ) {
+            handler: async function ( request: requestGeneric, response: FastifyReply ) {
                 const storageResponse = storage.update(
                     request.params.id,
                     {
@@ -48,9 +44,17 @@ export default {
                         personalScore: request.body.personalScore
                     });
 
-                return storageResponse
-                    ? {data: storageResponse}
-                    : {error: `${StatusCodes.NO_CONTENT} ${getReasonPhrase(StatusCodes.NO_CONTENT)}`};
+                if ( storageResponse ) {
+                    response.statusCode = StatusCodes.OK;
+
+                    return {data: storageResponse};
+                }
+
+                response.statusCode = StatusCodes.NOT_FOUND;
+
+                return {
+                    error: `Movie with ID ${request.params.id} is not found in database.`
+                };
             }
         };
     }

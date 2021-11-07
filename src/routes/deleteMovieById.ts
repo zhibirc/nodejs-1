@@ -14,11 +14,7 @@ interface requestGeneric extends RequestGenericInterface {
 
 
 export default {
-    init: (httpClient: any, storage: IStorage) => {
-        if ( !httpClient || !storage ) {
-            throw new Error('Router dependencies are incorrect.');
-        }
-
+    init: (storage: IStorage) => {
         return {
             schema: {
                 params: {
@@ -39,7 +35,9 @@ export default {
 
                 response.statusCode = StatusCodes.NOT_FOUND;
 
-                return {error: 'Movie with this ID is not found in database.'};
+                return {
+                    error: `Movie with ID ${request.params.id} is not found in database.`
+                };
             }
         };
     }

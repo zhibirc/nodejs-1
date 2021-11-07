@@ -1,10 +1,10 @@
-import * as expect from 'expect.js';
-import { Storage } from '../src/storage';
-import Fastify, { FastifyInstance } from 'fastify';
+const expect = require('expect.js');
+const Storage = require('../src/storage');
+const Fastify = require('fastify');
 
 // TODO: add new test
 describe('Main components', () => {
-    const server: FastifyInstance = Fastify({
+    const server = Fastify({
         logger: process.env.NODE_ENV !== 'production'
     });
     // Pino instance
