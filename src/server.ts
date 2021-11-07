@@ -1,57 +1,33 @@
-import { createServer, IncomingMessage, ServerResponse } from 'http';
-import { URL } from 'url';
-import { getReasonPhrase, StatusCodes } from 'http-status-codes';
-
-import router from './router';
-import { logger } from './logger';
+import Fastify, { FastifyInstance } from 'fastify';
+import { addRoutes } from './router';
 import config from './config';
+import { Storage } from './storage';
 
+const server: FastifyInstance = Fastify({
+    logger: process.env.NODE_ENV !== 'production'
+});
+// Pino instance
+const logger = server.log;
+const storage = new Storage(logger);
 
-const {
-    OK,
-    BAD_REQUEST,
-    NOT_FOUND
-} = StatusCodes;
+// initialize routes
+addRoutes(server)(storage);
 
-const server = createServer(async (request: IncomingMessage, response: ServerResponse) => {
-    const { method, url, headers } = request;
-    let parsedUrl = null;
-    let handler = null;
-
-    logger.info(`${method} ${url}`);
-
-    if ( method && url ) {
-        parsedUrl = new URL(url, `http://${headers.host}`);
-        handler = router[method][parsedUrl.pathname.slice(1)];
+const start = async () => {
+    try {
+        await server.listen(config.APP_PORT, (error, address) => {
+            if ( error ) {
+                logger.error(error);
+                process.exit(1);
+            }
+        });
+    } catch ( exception ) {
+        server.log.error(exception);
+        process.exit(1);
     }
+};
 
-    if ( handler ) {
-        try {
-            const data = await handler(request, parsedUrl!);
-
-            response.statusCode = OK;
-            response.end(data);
-        } catch ( exception ) {
-            logger.error(exception);
-            response.statusCode = BAD_REQUEST;
-            response.end(getReasonPhrase(BAD_REQUEST));
-        }
-    } else {
-        response.statusCode = NOT_FOUND;
-        response.end(getReasonPhrase(NOT_FOUND));
-    }
-});
-
-server.listen(config.APP_PORT, () => {
-    logger.info(`Server is listening on port ${config.APP_PORT}. Env is ${config.ENV}.`);
-});
-
-server.on('clientError', (error, socket) => {
-    // for more details error.rawPacket can be logged
-    logger.error(`Request error: "${error.message}".`);
-
-    socket.end('HTTP/1.1 400 Bad Request\r\n\r\n');
-});
+start();
 
 process.on('uncaughtException', error => {
     logger.error(`Unexpected error: ${error.message}.`);
