@@ -1,26 +1,79 @@
 import { FastifyLoggerInstance } from 'fastify';
+import cloneDeep from './utilities/cloneDeep';
+import filterMovieAttributes from './utilities/filterMovieAttributes';
 
 
-const cloneDeep = (item: any[]) => JSON.parse(JSON.stringify(item));
+export type UserInfo = {
+    email: string,
+    password: string,
+    role: string,
+    movieFavoritesList: string[],
+    [key: string]: any
+}
 
 
 export interface IStorage {
     readonly logger: FastifyLoggerInstance,
+    findUser: (email: unknown) => UserInfo | undefined,
+    addUser: (userInfo: UserInfo) => void,
+    updateUser: (userInfo: UserInfo) => boolean,
+    getUserFavorites: (email: string, filters?: string) => object[],
     add: (data: any) => object | boolean,
     read: (id: string | null, filters?: string) => object[],
     update: (id: string, data: any) => object | boolean,
-    delete: (id: string) => boolean
+    delete: (id: string) => boolean,
+    isExist: (id: string) => boolean
 }
+
 
 export class Storage implements IStorage {
     readonly logger: FastifyLoggerInstance;
-    private __store!: {[key: string]: any}[];
+    private __store!: {
+        users: UserInfo[],
+        movies: {[key: string]: any}[],
+    }
 
     constructor ( logger: FastifyLoggerInstance ) {
         this.logger = logger;
         Object.defineProperty(this, '__store', {
-            value: []
+            value: {
+                users: [],
+                movies: []
+            }
         });
+    }
+
+    findUser ( email: unknown ) {
+        const user = this.__store.users.find(user => user.email === email);
+
+        return user && cloneDeep(user);
+    }
+
+    addUser ( userInfo: UserInfo ) {
+        this.__store.users.push({
+            ...userInfo
+        });
+    }
+
+    updateUser ( userInfo: UserInfo): boolean {
+        const entryIndex = this.__store.users.findIndex(user => user.email === userInfo.email);
+
+        if ( entryIndex === -1 ) {
+            return false;
+        }
+
+        this.__store.users[entryIndex] = cloneDeep(userInfo);
+
+        return true;
+    }
+
+    getUserFavorites ( email: string, filters?: string ) {
+        const { movieFavoritesList } = this.findUser(email);
+        const payload = movieFavoritesList.map(
+            (id: string) => this.__store.movies.find(item => item.imdbID === id || item.name === id)
+        );
+
+        return filters ? filterMovieAttributes(cloneDeep(payload), filters) : payload;
     }
 
     add ( data: any ) {
@@ -31,48 +84,27 @@ export class Storage implements IStorage {
         }
 
         let index = id
-            ? this.__store.findIndex(item => item.imdbID === id)
-            : this.__store.findIndex(item => item.name === name);
+            ? this.__store.movies.findIndex(item => item.imdbID === id)
+            : this.__store.movies.findIndex(item => item.name === name);
 
         index === -1
-            ? this.__store.push(data)
+            ? this.__store.movies.push(data)
             // data can be updated, for example rating, votes, awards etc., so update in storage
-            : (this.__store[index] = data);
+            : (this.__store.movies[index] = data);
 
         return data;
     }
 
     read ( id: string | null, filters?: string ) {
-        let payload = id
-            ? cloneDeep(this.__store.filter(item => item.imdbID === id))
-            : cloneDeep(this.__store);
+        const payload = id
+            ? cloneDeep(this.__store.movies.filter(item => item.imdbID === id))
+            : cloneDeep(this.__store.movies);
 
-        if ( filters ) {
-            let requestedKeys = filters
-                .split(',')
-                .map(field => field.trim())
-                .filter(Boolean);
-
-            if ( requestedKeys.length ) {
-                payload = payload
-                    .map((item: any) => {
-                        for ( const key in item ) {
-                            if ( !requestedKeys.includes(key) ) {
-                                delete item[key];
-                            }
-                        }
-
-                        return item;
-                    })
-                    .filter((item: any) => Object.keys(item).length);
-            }
-        }
-
-        return payload;
+        return filters ? filterMovieAttributes(payload, filters) : payload;
     }
 
     update ( id: string, data: any ) {
-        const entry = this.__store.find(item => item.imdbID === id);
+        const entry = this.__store.movies.find(item => item.imdbID === id);
 
         if ( entry ) {
             const { comment, personalScore } = data;
@@ -96,14 +128,19 @@ export class Storage implements IStorage {
     }
 
     delete ( id: string ) {
-        const entry = this.__store.find(item => item.imdbID === id);
+        const entry = this.__store.movies.find(item => item.imdbID === id);
 
         if ( entry ) {
-            this.__store.splice(this.__store.indexOf(entry), 1);
+            this.__store.movies.splice(this.__store.movies.indexOf(entry), 1);
 
             return true;
         }
 
         return false;
+    }
+
+    isExist ( id: string ): boolean {
+        // as far as user can add movies which are not exist is OMDB database
+        return Boolean(this.__store.movies.find(item => item.imdbID === id || item.name === id));
     }
 }

@@ -4,17 +4,7 @@ import { StatusCodes } from 'http-status-codes';
 // types & interfaces
 import { FastifyReply, RequestGenericInterface } from 'fastify';
 import { IStorage } from '../storage';
-
-
-interface requestGeneric extends RequestGenericInterface {
-    params: {
-        id: string
-    },
-    body: {
-        comment: string,
-        personalScore: number
-    }
-}
+import '../types';
 
 
 export default {
@@ -26,23 +16,10 @@ export default {
                         type: 'string',
                         pattern: '^[a-z]{1,2}\\d{1,10}$'
                     }
-                },
-                body: {
-                    comment: {
-                        type: 'string'
-                    },
-                    personalScore: {
-                        type: 'number'
-                    }
                 }
             },
-            handler: async function ( request: requestGeneric, response: FastifyReply ) {
-                const storageResponse = storage.update(
-                    request.params.id,
-                    {
-                        comment: request.body.comment,
-                        personalScore: request.body.personalScore
-                    });
+            handler: async function ( request: RequestGenericInterface, response: FastifyReply ) {
+                const storageResponse = storage.read(request.params.id);
 
                 if ( storageResponse ) {
                     response.statusCode = StatusCodes.OK;

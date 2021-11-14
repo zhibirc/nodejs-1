@@ -1,20 +1,11 @@
-/**
- * Return movie by its ID for particular user.
- */
-
 // external
 import { StatusCodes } from 'http-status-codes';
 
 // types & interfaces
 import { FastifyReply, RequestGenericInterface } from 'fastify';
 import { IStorage } from '../storage';
-
-
-interface requestGeneric extends RequestGenericInterface {
-    params: {
-        id: string
-    }
-}
+import auth from '../middlewares/auth';
+import '../types';
 
 
 export default {
@@ -28,20 +19,27 @@ export default {
                     }
                 }
             },
-            handler: async function ( request: requestGeneric, response: FastifyReply ) {
-                const storageResponse = storage.read(request.params.id);
+            preHandler: auth,
+            handler: async function ( request: RequestGenericInterface, response: FastifyReply ) {
+                const user = request.user;
+
+                if ( !user ) {
+                    return response
+                        .code(StatusCodes.FORBIDDEN)
+                        .send({error: 'Unauthorized access is prohibited.'});
+                }
+
+                const storageResponse = storage.delete(request.params.id);
 
                 if ( storageResponse ) {
                     response.statusCode = StatusCodes.OK;
 
-                    return {data: storageResponse};
+                    return {error: null};
                 }
 
                 response.statusCode = StatusCodes.NOT_FOUND;
 
-                return {
-                    error: `Movie with ID ${request.params.id} is not found in database.`
-                };
+                return {error: `Movie with ID ${request.params.id} is not found in database.`};
             }
         };
     }

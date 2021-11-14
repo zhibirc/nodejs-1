@@ -2,12 +2,16 @@ import { FastifyReply, FastifyRequest} from 'fastify';
 import { StatusCodes } from 'http-status-codes';
 import { IStorage } from '../storage';
 import { default as searchOmdb } from '../services/omdb-search';
+import auth from '../middlewares/auth';
+import '../types';
+
 
 export default {
     init: (storage: IStorage) => {
         return {
             schema: {
                 body: {
+                    type: 'object',
                     // name of the movie, overwrites original film title if given
                     name: {
                         type: 'string'
@@ -22,7 +26,16 @@ export default {
                     }
                 }
             },
+            preHandler: auth,
             handler: async function ( request: FastifyRequest, response: FastifyReply ) {
+                const user = request.user;
+
+                if ( !user ) {
+                    return response
+                        .code(StatusCodes.FORBIDDEN)
+                        .send({error: 'Unauthorized access is prohibited.'});
+                }
+
                 try {
                     // @ts-ignore
                     const { name, comment, personalScore } = request.body;
@@ -39,9 +52,7 @@ export default {
                 } catch ( exception ) {
                     response.statusCode = StatusCodes.INTERNAL_SERVER_ERROR;
 
-                    return {
-                        error: 'Unexpected error.'
-                    };
+                    return {error: 'Unexpected error.'};
                 }
             }
         };
