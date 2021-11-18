@@ -2,8 +2,11 @@ import { FastifyReply, FastifyRequest} from 'fastify';
 import { StatusCodes } from 'http-status-codes';
 import { IStorage } from '../storage';
 import { default as searchOmdb } from '../services/omdb-search';
-import auth from '../middlewares/auth';
 import '../types';
+
+// middlewares
+import auth from '../middlewares/auth';
+import hasAccess from '../middlewares/hasAccess';
 
 
 export default {
@@ -26,16 +29,8 @@ export default {
                     }
                 }
             },
-            preHandler: auth,
+            preHandler: [auth, hasAccess],
             handler: async function ( request: FastifyRequest, response: FastifyReply ) {
-                const user = request.user;
-
-                if ( !user ) {
-                    return response
-                        .code(StatusCodes.FORBIDDEN)
-                        .send({error: 'Unauthorized access is prohibited.'});
-                }
-
                 try {
                     // @ts-ignore
                     const { name, comment, personalScore } = request.body;
@@ -44,15 +39,11 @@ export default {
                     comment && (info.comment = comment);
                     personalScore && (info.personalScore = personalScore);
 
-                    const storageResponse = storage.add(info);
-
-                    response.statusCode = StatusCodes.OK;
-
-                    return {data: storageResponse};
-                } catch ( exception ) {
-                    response.statusCode = StatusCodes.INTERNAL_SERVER_ERROR;
-
-                    return {error: 'Unexpected error.'};
+                    return {data: storage.add(info)};
+                } catch {
+                    return response
+                        .code(StatusCodes.INTERNAL_SERVER_ERROR)
+                        .send({error: 'Unexpected error.'});
                 }
             }
         };

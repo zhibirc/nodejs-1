@@ -1,8 +1,12 @@
 import { FastifyReply, FastifyRequest} from 'fastify';
 import { StatusCodes } from 'http-status-codes';
+import { JwtPayload } from 'jsonwebtoken';
 import { IStorage } from '../storage';
-import auth from '../middlewares/auth';
 import '../types';
+
+// middlewares
+import auth from '../middlewares/auth';
+import hasAccess from '../middlewares/hasAccess';
 
 
 export default {
@@ -22,39 +26,28 @@ export default {
                     }
                 }
             },
-            preHandler: auth,
+            preHandler: [auth, hasAccess],
             handler: async function ( request: FastifyRequest, response: FastifyReply ) {
-                if ( !request.user ) {
-                    return response
-                        .code(StatusCodes.FORBIDDEN)
-                        .send({error: 'Unauthorized access is prohibited.'});
-                }
-
                 // @ts-ignore
                 let { id: movieId, favorites: isFavorite } = request.body;
                 const isExistInStorage: boolean = storage.isExist(movieId);
 
                 if ( !isExistInStorage ) {
-                    response.statusCode = StatusCodes.NOT_FOUND;
-
-                    return {error: 'Movie not found'};
+                    return response
+                        .code(StatusCodes.NOT_FOUND)
+                        .send({error: 'Movie not found.'});
                 }
 
-                const { payload: { email } } = request.user;
+                const { payload: { email } } = request.user as JwtPayload;
                 const user = storage.findUser(email)!;
 
-                if ( isFavorite && !user.movieFavoritesList.includes(movieId) ) {
-                    user.movieFavoritesList.push(movieId);
-                }
-
-                if ( !isFavorite && user.movieFavoritesList.includes(movieId) ) {
-                    user.movieFavoritesList.splice(user.movieFavoritesList.indexOf(movieId), 1);
-                }
+                isFavorite
+                    ? user.movieFavoritesList.add(movieId)
+                    : user.movieFavoritesList.delete(movieId);
 
                 storage.updateUser(user);
-                response.statusCode = StatusCodes.OK;
 
-                return {data: `Favorites state is set to ${isFavorite} for movie ${movieId}`};
+                return {data: `Favorites state is set to ${isFavorite} for movie ${movieId}.`};
             }
         };
     }

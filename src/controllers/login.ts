@@ -37,22 +37,20 @@ export default {
                     if ( hasher.verify(password, user.password) ) {
                         const payload = {email, role};
 
-                        response.statusCode = StatusCodes.OK;
-
                         return {
                             ...payload,
                             token: jwt.sign({payload})
                         };
                     }
 
-                    response.statusCode = StatusCodes.FORBIDDEN;
-
-                    return {error: 'Password is incorrect.'};
+                    return response
+                        .code(StatusCodes.UNAUTHORIZED)
+                        .send({error: 'Password is incorrect.'});
                 }
 
-                response.statusCode = StatusCodes.NOT_FOUND;
-
-                return {error: 'User not found.'};
+                return response
+                    .code(StatusCodes.UNAUTHORIZED)
+                    .send({error: 'User not found.'});
             }
         };
     }

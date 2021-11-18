@@ -45,7 +45,7 @@ export default {
                         email,
                         password: hasher.hash(password),
                         role: ROLE_USER,
-                        movieFavoritesList: []
+                        movieFavoritesList: new Set()
                     });
 
                     response.statusCode = StatusCodes.CREATED;

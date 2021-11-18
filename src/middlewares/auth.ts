@@ -3,12 +3,12 @@ import { DoneFuncWithErrOrRes, FastifyReply, FastifyRequest } from 'fastify';
 import { JwtPayload } from 'jsonwebtoken';
 
 
-interface requestGeneric extends FastifyRequest {
+interface RequestGeneric extends FastifyRequest {
     user: {[key: string]: any} | null
 }
 
 
-export default function ( request: requestGeneric, response: FastifyReply, done: DoneFuncWithErrOrRes ) {
+export default function ( request: RequestGeneric, response: FastifyReply, done: DoneFuncWithErrOrRes ) {
     const authHeader = request.headers.authorization;
 
     if ( authHeader && authHeader.split(' ')[0] === 'Bearer') {

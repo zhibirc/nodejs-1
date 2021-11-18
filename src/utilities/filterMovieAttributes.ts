@@ -6,16 +6,12 @@ export default (data: any[], filters: string) => {
 
     if ( requestedKeys.length ) {
         data = data
-            .map((item: any) => {
-                for (const key in item) {
-                    if ( !requestedKeys.includes(key) ) {
-                        delete item[key];
-                    }
-                }
-
-                return item;
-            })
-            .filter((item: any) => Object.keys(item).length);
+            .map(
+                (item: any) => Object
+                    .keys(item)
+                    .filter(key => requestedKeys.includes(key))
+                    .reduce((result: Record<string, any>, key) => (result[key] = item[key]), {})
+            ).filter((item: any) => Object.keys(item).length);
     }
 
     return data;

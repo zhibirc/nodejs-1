@@ -7,7 +7,7 @@ export type UserInfo = {
     email: string,
     password: string,
     role: string,
-    movieFavoritesList: string[],
+    movieFavoritesList: Set<string>,
     [key: string]: any
 }
 
@@ -69,7 +69,7 @@ export class Storage implements IStorage {
 
     getUserFavorites ( email: string, filters?: string ) {
         const { movieFavoritesList } = this.findUser(email);
-        const payload = movieFavoritesList.map(
+        const payload = [...movieFavoritesList].map(
             (id: string) => this.__store.movies.find(item => item.imdbID === id || item.name === id)
         );
 

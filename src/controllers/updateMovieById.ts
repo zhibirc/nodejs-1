@@ -4,8 +4,11 @@ import { StatusCodes } from 'http-status-codes';
 // types & interfaces
 import { FastifyReply, RequestGenericInterface } from 'fastify';
 import { IStorage } from '../storage';
-import auth from '../middlewares/auth';
 import '../types';
+
+// middlewares
+import auth from '../middlewares/auth';
+import hasAccess from '../middlewares/hasAccess';
 
 
 export default {
@@ -27,16 +30,8 @@ export default {
                     }
                 }
             },
-            preHandler: auth,
+            preHandler: [auth, hasAccess],
             handler: async function ( request: RequestGenericInterface, response: FastifyReply ) {
-                const user = request.user;
-
-                if ( !user ) {
-                    return response
-                        .code(StatusCodes.FORBIDDEN)
-                        .send({error: 'Unauthorized access is prohibited.'});
-                }
-
                 const storageResponse = storage.update(
                     request.params.id,
                     {
