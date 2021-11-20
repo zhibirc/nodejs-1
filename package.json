@@ -17,7 +17,7 @@
         "build": "npx tsc",
         "postbuild": "npm run test",
         "test": "mocha",
-        "start": "APP_PORT=8080 nodemon --trace-sync-io --trace-deprecation --exec 'ts-node src/server.ts'"
+        "start": "APP_PORT=8080 nodemon --trace-sync-io --trace-deprecation"
     },
     "homepage": "https://github.com/zhibirc/nodejs-1#readme",
     "repository": {
@@ -31,10 +31,12 @@
     "dependencies": {
         "axios": "^0.24.0",
         "fastify": "^3.22.1",
-        "http-status-codes": "^2.1.4"
+        "http-status-codes": "^2.1.4",
+        "jsonwebtoken": "^8.5.1"
     },
     "devDependencies": {
         "@types/expect.js": "^0.3.29",
+        "@types/jsonwebtoken": "^8.5.5",
         "@types/mocha": "^9.0.0",
         "@types/node": "^16.11.6",
         "expect.js": "^0.3.1",

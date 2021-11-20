@@ -4,13 +4,11 @@ import { StatusCodes } from 'http-status-codes';
 // types & interfaces
 import { FastifyReply, RequestGenericInterface } from 'fastify';
 import { IStorage } from '../storage';
+import '../types';
 
-
-interface requestGeneric extends RequestGenericInterface {
-    params: {
-        id: string
-    }
-}
+// middlewares
+import auth from '../middlewares/auth';
+import hasAccess from '../middlewares/hasAccess';
 
 
 export default {
@@ -24,20 +22,17 @@ export default {
                     }
                 }
             },
-            handler: async function ( request: requestGeneric, response: FastifyReply ) {
+            preHandler: [auth, hasAccess],
+            handler: async function ( request: RequestGenericInterface, response: FastifyReply ) {
                 const storageResponse = storage.delete(request.params.id);
 
                 if ( storageResponse ) {
-                    response.statusCode = StatusCodes.OK;
-
                     return {error: null};
                 }
 
-                response.statusCode = StatusCodes.NOT_FOUND;
-
-                return {
-                    error: `Movie with ID ${request.params.id} is not found in database.`
-                };
+                return response
+                    .code(StatusCodes.NOT_FOUND)
+                    .send({error: `Movie with ID ${request.params.id} is not found in database.`});
             }
         };
     }

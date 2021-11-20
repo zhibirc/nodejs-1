@@ -6,13 +6,17 @@
 import { FastifyInstance, RouteOptions } from 'fastify';
 import { IStorage } from './storage';
 
-// routes
-import addMovies from './routes/addMovies';
-import getStatic from './routes/getStatic';
-import getAllMovies from './routes/getAllMovies';
-import getMovieById from './routes/getMovieById';
-import updateMovieById from './routes/updateMovieById';
-import deleteMovieById from './routes/deleteMovieById';
+// controllers
+import addMovies from './controllers/addMovies';
+import getStatic from './controllers/getStatic';
+import getAllMovies from './controllers/getAllMovies';
+import getMovieById from './controllers/getMovieById';
+import updateMovieById from './controllers/updateMovieById';
+import deleteMovieById from './controllers/deleteMovieById';
+import register from './controllers/register';
+import login from './controllers/login';
+import setFavorites from './controllers/setFavorites';
+import getFavorites from './controllers/getFavorites';
 
 
 type Router = {
@@ -23,23 +27,34 @@ const router: Router = {
     GET: {
         /**
          * Serve static HTML page for the site root.
+         *
+         * @public
          */
         '/': getStatic,
 
         /**
          * Get all movies.
-         *
          * Return list of all user's movies from the service storage.
          * It supports sorting by different fields as well as pagination.
+         *
+         * @public
          */
         '/movies': getAllMovies,
 
         /**
          * Get movie by ID.
-         *
          * Return all information about movies associated with ID.
+         *
+         * @public
          */
-        '/movies/:id': getMovieById
+        '/movies/:id': getMovieById,
+
+        /**
+         * Get Favorites movie list for particular user.
+         *
+         * @private
+         */
+        '/favorites': getFavorites
     },
 
     /**
@@ -50,24 +65,54 @@ const router: Router = {
      * Otherwise, store data provided in the request by the user.
      */
     POST: {
-        '/movies': addMovies
+        /**
+         * Sign up for a new user.
+         * Email and password of required constraints should be provided.
+         *
+         * @public
+         */
+        '/register': register,
+
+        /**
+         * Sign in to the application with given credentials.
+         *
+         * @public
+         */
+        '/login': login,
+
+        /**
+         * Add movies to collection.
+         * Search in OMDb movie database and add result into local collection.
+         *
+         * @private
+         */
+        '/movies': addMovies,
+
+        /**
+         * Include/exclude a movie to/from Favorites list for particular user.
+         *
+         * @private
+         */
+        '/favorites': setFavorites
     },
 
-    /**
-     * Update movie by ID.
-     *
-     * Update user's information about the particular movie.
-     */
     PATCH: {
+        /**
+         * Update movie by ID.
+         * Update user's information about the particular movie.
+         *
+         * @private
+         */
         '/movies/:id': updateMovieById
     },
 
-    /**
-     * Delete movie by ID.
-     *
-     * Delete movies from the service's storage.
-     */
     DELETE: {
+        /**
+         * Delete movie by ID.
+         * Delete movies from the service's storage.
+         *
+         * @private
+         */
         '/movies/:id': deleteMovieById
     }
 };

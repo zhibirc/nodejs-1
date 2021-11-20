@@ -1,20 +1,10 @@
-/**
- * Return movie by its ID for particular user.
- */
-
 // external
 import { StatusCodes } from 'http-status-codes';
 
 // types & interfaces
 import { FastifyReply, RequestGenericInterface } from 'fastify';
 import { IStorage } from '../storage';
-
-
-interface requestGeneric extends RequestGenericInterface {
-    params: {
-        id: string
-    }
-}
+import '../types';
 
 
 export default {
@@ -28,7 +18,7 @@ export default {
                     }
                 }
             },
-            handler: async function ( request: requestGeneric, response: FastifyReply ) {
+            handler: async function ( request: RequestGenericInterface, response: FastifyReply ) {
                 const storageResponse = storage.read(request.params.id);
 
                 if ( storageResponse ) {

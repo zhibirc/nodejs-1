@@ -12,6 +12,7 @@ const storage = new Storage(logger);
 
 // initialize routes
 addRoutes(server)(storage);
+server.decorateRequest('user', null);
 
 const start = async () => {
     try {
