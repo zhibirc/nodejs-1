@@ -130,4 +130,7 @@ export const addRoutes = (serverInstance: FastifyInstance) => (storage: IStorage
             });
         });
     });
+
+    // @ts-ignore
+    serverInstance.get('/healthcheck', () => 'OK');
 };

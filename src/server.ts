@@ -16,7 +16,7 @@ server.decorateRequest('user', null);
 
 const start = async () => {
     try {
-        await server.listen(config.APP_PORT);
+        await server.listen(config.APP_PORT, '0.0.0.0');
     } catch ( exception ) {
         logger.error(exception);
         process.exit(1);

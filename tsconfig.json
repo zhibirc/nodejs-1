@@ -1,0 +1,22 @@
+{
+    "include": [
+        "./src"
+    ],
+    "exclude": [
+        "node_modules",
+        "tests"
+    ],
+    "compilerOptions": {
+        "target": "es6",
+        "module": "commonjs",
+        "moduleResolution": "node",
+        /* path resolution */
+        "baseUrl": ".",
+        "rootDir": "./src",
+        "outDir": "./dst",
+        /* enrich compiler output */
+        "listFiles": true,
+        "listEmittedFiles": true,
+        "pretty": true
+    }
+}
