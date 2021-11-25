@@ -5,7 +5,7 @@ import { IStorage } from '../storage';
 import '../types';
 
 // schemas
-import * as getMovieListSchema from './schemas/getMovieList';
+import getAllMoviesSchema from './schemas/getAllMoviesSchema';
 
 // middlewares
 import auth from '../middlewares/auth';
@@ -15,12 +15,12 @@ import hasAccess from '../middlewares/hasAccess';
 export default {
     init: (storage: IStorage) => {
         return {
-            schema: getMovieListSchema,
+            schema: getAllMoviesSchema,
             preHandler: [auth, hasAccess],
             handler: async function ( request: RequestGenericInterface ) {
                 const { fields, limit, offset } = request.query;
                 const { payload: { email } } = request.user as JwtPayload;
-                let storageResponse = storage.getUserFavorites(email, fields);
+                let storageResponse = await storage.getUserFavorites(email, fields);
 
                 offset >= 0 && (storageResponse = storageResponse.slice(offset));
                 limit > 0 && (storageResponse = storageResponse.slice(0, limit));

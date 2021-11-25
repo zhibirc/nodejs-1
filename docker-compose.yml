@@ -4,12 +4,23 @@ services:
     db:
         container_name: movies-db
         image: postgres:14.1
-        restart: always
+        restart: unless-stopped
         environment:
             POSTGRES_DB: movies
             POSTGRES_USER: admin
             POSTGRES_PASSWORD: 12345
-        networks:
-            - movies-network
         ports:
-            - "5432:5432"
+            - 5432:5432
+        volumes:
+            - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+
+    api:
+        container_name: movies-api
+        build:
+            context: .
+            dockerfile: Dockerfile
+        restart: unless-stopped
+        depends_on:
+            - db
+        ports:
+            - 8080:8080

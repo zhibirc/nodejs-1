@@ -4,37 +4,24 @@ import { IStorage } from '../storage';
 import { Hasher } from '../utilities/hasher';
 import jwt from '../utilities/jwt';
 
-
-const hasher = new Hasher();
+// schemas
+import loginSchema from './schemas/loginSchema';
 
 
 export default {
     init: (storage: IStorage) => {
         return {
-            schema: {
-                body: {
-                    type: 'object',
-                    required: ['email', 'password'],
-                    properties: {
-                        email: {
-                            type: 'string',
-                            format: 'email'
-                        },
-                        password: {
-                            type: 'string'
-                        }
-                    }
-                }
-            },
+            schema: loginSchema,
             handler: async function ( request: FastifyRequest, response: FastifyReply ) {
                 // @ts-ignore
                 const { email, password } = request.body;
-                const user = storage.findUser(email);
+
+                const user = await storage.findUser(email);
 
                 if ( user ) {
-                    const role = user.role;
+                    const { password_hash, role } = user;
 
-                    if ( hasher.verify(password, user.password) ) {
+                    if ( new Hasher().verify(password, password_hash) ) {
                         const payload = {email, role};
 
                         return {

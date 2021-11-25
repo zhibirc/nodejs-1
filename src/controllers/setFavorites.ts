@@ -8,29 +8,19 @@ import '../types';
 import auth from '../middlewares/auth';
 import hasAccess from '../middlewares/hasAccess';
 
+// schemas
+import setFavoritesSchema from './schemas/setFavoritesSchema';
+
 
 export default {
     init: (storage: IStorage) => {
         return {
-            schema: {
-                body: {
-                    type: 'object',
-                    required: ['id'],
-                    properties: {
-                        id: {
-                            type: 'string'
-                        },
-                        favorites: {
-                            type: 'boolean'
-                        }
-                    }
-                }
-            },
+            schema: setFavoritesSchema,
             preHandler: [auth, hasAccess],
             handler: async function ( request: FastifyRequest, response: FastifyReply ) {
                 // @ts-ignore
                 let { id: movieId, favorites: isFavorite } = request.body;
-                const isExistInStorage: boolean = storage.isExist(movieId);
+                const isExistInStorage: boolean = await storage.isMovieExist(movieId);
 
                 if ( !isExistInStorage ) {
                     return response
@@ -39,13 +29,8 @@ export default {
                 }
 
                 const { payload: { email } } = request.user as JwtPayload;
-                const user = storage.findUser(email)!;
 
-                isFavorite
-                    ? user.movieFavoritesList.add(movieId)
-                    : user.movieFavoritesList.delete(movieId);
-
-                storage.updateUser(user);
+                await storage.setUserFavorites(email, movieId, isFavorite);
 
                 return {data: `Favorites state is set to ${isFavorite} for movie ${movieId}.`};
             }

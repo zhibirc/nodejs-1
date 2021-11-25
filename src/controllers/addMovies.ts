@@ -3,43 +3,41 @@ import { StatusCodes } from 'http-status-codes';
 import { IStorage } from '../storage';
 import { default as searchOmdb } from '../services/omdb-search';
 import '../types';
+import { JwtPayload } from 'jsonwebtoken';
+import { MetaInfo } from '../storage';
 
 // middlewares
 import auth from '../middlewares/auth';
 import hasAccess from '../middlewares/hasAccess';
 
+// schemas
+import addMoviesSchema from './schemas/addMoviesSchema';
+
 
 export default {
     init: (storage: IStorage) => {
         return {
-            schema: {
-                body: {
-                    type: 'object',
-                    // name of the movie, overwrites original film title if given
-                    name: {
-                        type: 'string'
-                    },
-                    // user's comment
-                    comment: {
-                        type: 'string'
-                    },
-                    // user's movie score
-                    personalScore: {
-                        type: 'number'
-                    }
-                }
-            },
+            schema: addMoviesSchema,
             preHandler: [auth, hasAccess],
             handler: async function ( request: FastifyRequest, response: FastifyReply ) {
                 try {
                     // @ts-ignore
                     const { name, comment, personalScore } = request.body;
-                    const info = await searchOmdb(name);
+                    const { payload: { email } } = request.user as JwtPayload;
 
-                    comment && (info.comment = comment);
-                    personalScore && (info.personalScore = personalScore);
+                    const data = await searchOmdb(name);
+                    const movieId = await storage.addMovie(data, email);
 
-                    return {data: storage.add(info)};
+                    const meta: MetaInfo = {};
+
+                    comment && (meta.comment = comment.trim());
+                    personalScore && (meta.personalScore = personalScore);
+
+                    if ( Object.keys(meta).length ) {
+                        await storage.setMovieMetaInfo(meta, email, movieId);
+                    }
+
+                    return {data};
                 } catch {
                     return response
                         .code(StatusCodes.INTERNAL_SERVER_ERROR)
