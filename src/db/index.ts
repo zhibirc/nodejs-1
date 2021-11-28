@@ -1,5 +1,6 @@
 import { Pool } from 'pg';
 import { FastifyLoggerInstance } from 'fastify';
+import errorCodes from './errorCodes';
 
 
 export interface IDatabase {
@@ -24,9 +25,12 @@ export class Database implements IDatabase {
 
             return result;
         } catch ( exception ) {
+            const error = errorCodes[exception.code];
+
+            error && this.logger.error(`General error: ${error}.`);
             this.logger.error(exception);
 
-            return null;
+            throw exception;
         }
     }
 }

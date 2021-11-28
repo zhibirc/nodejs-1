@@ -19,6 +19,8 @@ services:
         build:
             context: .
             dockerfile: Dockerfile
+        environment:
+            OMDB_KEY: ${OMDB_KEY}
         restart: unless-stopped
         depends_on:
             - db

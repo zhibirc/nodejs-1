@@ -25,7 +25,7 @@ COPY --from=compilation /usr/src/app/dst ./dst
 RUN npm ci
 
 LABEL maintainer="Yaroslav Surilov <ysurilov@domain.com>"
-HEALTHCHECK --interval=10s --timeout=3s CMD wget --quiet --spider --tries=1 127.0.0.1:8080/healthcheck || exit 1
+HEALTHCHECK --interval=10s --timeout=3s CMD wget --quiet --spider --tries=1 127.0.0.1:${PORT}/healthcheck || exit 1
 
 EXPOSE ${PORT}/TCP
 

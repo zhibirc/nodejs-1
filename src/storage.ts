@@ -57,16 +57,14 @@ export class Storage implements IStorage {
     async getUserFavorites ( email, filters ) {
         const { user_id } = await this.findUser(email);
 
-        let payload = await this.db.query(
-            `
+        let payload = await this.db.query(`
             SELECT *
             FROM movies
             WHERE movie_id IN (
                 SELECT movie_id
                 FROM favorites
                 WHERE user_id = $1
-            )
-            `, [user_id]
+            )`, [user_id]
         );
         payload = payload.rows;
 
@@ -78,8 +76,7 @@ export class Storage implements IStorage {
         const { movie_id } = await this.getMovieById(movieId);
 
         if ( isFavorite ) {
-            await this.db.query(
-                `
+            await this.db.query(`
                 INSERT INTO
                     favorites (user_id, movie_id)
                 VALUES ($1, $2)
@@ -117,19 +114,25 @@ export class Storage implements IStorage {
         let queryResult;
 
         if ( id ) {
-            queryResult = await this.db.query(
-                `
-                    SELECT COALESCE(movies.data || meta.data, movies.data)
-                    FROM movies
-                    LEFT JOIN meta ON movies.movie_id = meta.movie_id
-                    WHERE movies.data ->> 'imdbID' = $1 OR movies.data ->> 'name' = $1
+            queryResult = await this.db.query(`
+                SELECT COALESCE(movies.data || meta.data, movies.data)
+                FROM movies
+                LEFT JOIN meta ON movies.movie_id = meta.movie_id
+                WHERE movies.data ->> 'imdbID' = $1 OR movies.data ->> 'name' = $1
                 `, [id]
             );
 
             return queryResult.rows[0].coalesce;
         }
 
-        queryResult = await this.db.query('SELECT movies.data FROM movies FULL JOIN meta ON movies.movie_id = meta.movie_id', []);
+        // "meta" field is used for combine all existent comments&scores for each movie
+        queryResult = await this.db.query(`
+            SELECT movies.data || jsonb_build_object('meta', jsonb_agg(meta.data))
+            FROM movies
+            LEFT JOIN meta ON movies.movie_id = meta.movie_id
+            GROUP BY movies.movie_id;
+            `, []
+        );
         queryResult = queryResult.rows;
 
         return filters ? filterMovieAttributes(queryResult, filters) : queryResult;
@@ -156,14 +159,13 @@ export class Storage implements IStorage {
     async setMovieMetaInfo ( data, email, movieId ) {
         const { user_id } = await this.findUser(email);
 
-        await this.db.query(
-            `
-                INSERT INTO
-                    meta (data, movie_id, user_id)
-                VALUES
-                    ($1, $2, $3)
-                ON CONFLICT (movie_id, user_id)
-                DO UPDATE SET data = $1
+        await this.db.query(`
+            INSERT INTO
+                meta (data, movie_id, user_id)
+            VALUES
+                ($1, $2, $3)
+            ON CONFLICT (movie_id, user_id)
+            DO UPDATE SET data = $1
             `, [data, movieId, user_id]
         );
     }

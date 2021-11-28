@@ -3,7 +3,7 @@
  */
 
 const cliArgs = process.argv.slice(4);
-const apiKey = cliArgs[0] === '--KEY' || cliArgs[0] === '--key' ? cliArgs[1] : null;
+const apiKey = cliArgs[0] === '--KEY' || cliArgs[0] === '--key' ? cliArgs[1] : process.env.OMDB_KEY;
 
 
 export default Object.freeze({

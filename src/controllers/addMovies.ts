@@ -1,7 +1,7 @@
 import { FastifyReply, FastifyRequest} from 'fastify';
 import { StatusCodes } from 'http-status-codes';
 import { IStorage } from '../storage';
-import { default as searchOmdb } from '../services/omdb-search';
+import searchOmdb from '../services/searchOmdb';
 import '../types';
 import { JwtPayload } from 'jsonwebtoken';
 import { MetaInfo } from '../storage';

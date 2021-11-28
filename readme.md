@@ -7,7 +7,7 @@
 npm run dev -- --key <OMDb API Key>
 
 # Docker
-docker compose up --build
+OMDB_KEY=<OMDb API Key> docker compose up --build
 ```
 
 
