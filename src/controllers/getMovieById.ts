@@ -6,32 +6,24 @@ import { FastifyReply, RequestGenericInterface } from 'fastify';
 import { IStorage } from '../storage';
 import '../types';
 
+// schemas
+import getMovieByIdSchema from './schemas/getMovieByIdSchema';
+
 
 export default {
     init: (storage: IStorage) => {
         return {
-            schema: {
-                params: {
-                    id: {
-                        type: 'string',
-                        pattern: '^[a-z]{1,2}\\d{1,10}$'
-                    }
-                }
-            },
+            schema: getMovieByIdSchema,
             handler: async function ( request: RequestGenericInterface, response: FastifyReply ) {
-                const storageResponse = storage.read(request.params.id);
+                const storageResponse = await storage.getMovies(request.params.id);
 
                 if ( storageResponse ) {
-                    response.statusCode = StatusCodes.OK;
-
                     return {data: storageResponse};
                 }
 
-                response.statusCode = StatusCodes.NOT_FOUND;
-
-                return {
-                    error: `Movie with ID ${request.params.id} is not found in database.`
-                };
+                return response
+                    .code(StatusCodes.NOT_FOUND)
+                    .send({error: `Movie with ID ${request.params.id} is not found in database.`});
             }
         };
     }

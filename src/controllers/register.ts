@@ -2,36 +2,23 @@ import { FastifyReply, FastifyRequest} from 'fastify';
 import { StatusCodes } from 'http-status-codes';
 import { IStorage } from '../storage';
 import { Hasher } from '../utilities/hasher';
+
+// constants
 import { ROLE_USER } from '../constants/userRoles';
+
+// schemas
+import registerSchema from './schemas/registerSchema';
 
 
 export default {
     init: (storage: IStorage) => {
         return {
-            schema: {
-                body: {
-                    type: 'object',
-                    required: ['email', 'password'],
-                    properties: {
-                        email: {
-                            type: 'string',
-                            format: 'email'
-                        },
-                        password: {
-                            type: 'string',
-                            // Must contain at least one: Latin lowercase letter, Latin uppercase letter, decimal digit, special characterю
-                            pattern: '^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[-~`!@#$%^&*()_+={}|<>[\\]\'"])[-A-Za-z\\d~`!@#$%^&*()_+={}|<>[\\]\'"]+$',
-                            minLength: 20,
-                            maxLength: 32
-                        }
-                    }
-                }
-            },
+            schema: registerSchema,
             handler: async function ( request: FastifyRequest, response: FastifyReply ) {
                 try {
                     // @ts-ignore
                     const { email, password } = request.body;
-                    const user = storage.findUser(email);
+                    const user = await storage.findUser(email);
 
                     if ( user ) {
                         response.statusCode = StatusCodes.FORBIDDEN;
@@ -39,13 +26,10 @@ export default {
                         return {error: `User with ${email} already exists.`};
                     }
 
-                    const hasher = new Hasher();
-
-                    storage.addUser({
+                    await storage.addUser({
                         email,
-                        password: hasher.hash(password),
-                        role: ROLE_USER,
-                        movieFavoritesList: new Set()
+                        password: new Hasher().hash(password),
+                        role: ROLE_USER
                     });
 
                     response.statusCode = StatusCodes.CREATED;

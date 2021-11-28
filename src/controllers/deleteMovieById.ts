@@ -10,24 +10,20 @@ import '../types';
 import auth from '../middlewares/auth';
 import hasAccess from '../middlewares/hasAccess';
 
+// schemas
+import deleteMovieByIdSchema from './schemas/deleteMovieByIdSchema';
+
 
 export default {
     init: (storage: IStorage) => {
         return {
-            schema: {
-                params: {
-                    id: {
-                        type: 'string',
-                        pattern: '^[a-z]{1,2}\\d{1,10}$'
-                    }
-                }
-            },
+            schema: deleteMovieByIdSchema,
             preHandler: [auth, hasAccess],
             handler: async function ( request: RequestGenericInterface, response: FastifyReply ) {
-                const storageResponse = storage.delete(request.params.id);
+                const storageResponse = await storage.deleteMovie(request.params.id);
 
                 if ( storageResponse ) {
-                    return {error: null};
+                    return {message: `Movie with ID ${request.params.id} deleted.`};
                 }
 
                 return response

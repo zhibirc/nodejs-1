@@ -3,7 +3,11 @@
 ## Usage
 
 ```shell
-npm start -- --key <OMDb API Key>
+# development
+npm run dev -- --key <OMDb API Key>
+
+# Docker
+OMDB_KEY=<OMDb API Key> docker compose up --build
 ```
 
 
